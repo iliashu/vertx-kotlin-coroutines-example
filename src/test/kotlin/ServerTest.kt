@@ -1,4 +1,6 @@
+import com.example.starter.createDbClient
 import com.example.starter.createRouter
+import com.example.starter.initDB
 import io.restassured.RestAssured
 import io.vertx.core.Vertx
 import io.vertx.junit5.VertxTestContext
@@ -21,13 +23,16 @@ class ServerTest {
 
         val vertx = Vertx.vertx()
 
-        val testedRouter = createRouter(vertx)
+        val db = createDbClient(vertx)
+
+        val testedRouter = createRouter(vertx, db)
 
         val server = vertx.createHttpServer()
                 .requestHandler(testedRouter)
                 .listen(0, testContext.completing())
 
         runBlocking {
+            initDB(db)
             block(server.actualPort())
         }
 

@@ -15,6 +15,7 @@ val vertxVersion = "3.8.4"
 val junitVersion = "5.5.2"
 val log4jVersion = "2.13.0"
 val restAssuredVersion = "4.1.2"
+val hsqldbVersion = "2.5.0"
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
@@ -24,6 +25,9 @@ dependencies {
     implementation("io.vertx","vertx-web", vertxVersion)
     implementation("io.vertx","vertx-lang-kotlin", vertxVersion)
     implementation("io.vertx","vertx-lang-kotlin-coroutines", vertxVersion)
+    implementation("io.vertx","vertx-jdbc-client", vertxVersion)
+    
+    runtimeOnly("org.hsqldb", "hsqldb", hsqldbVersion)
 
     testImplementation("org.junit.jupiter", "junit-jupiter-api", junitVersion)
     testImplementation("io.vertx", "vertx-junit5", vertxVersion)
