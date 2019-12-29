@@ -1,6 +1,4 @@
-import com.example.starter.createDbClient
-import com.example.starter.createRouter
-import com.example.starter.initDB
+
 import io.restassured.RestAssured
 import io.vertx.core.Vertx
 import io.vertx.ext.jdbc.JDBCClient
@@ -9,6 +7,9 @@ import io.vertx.kotlin.core.closeAwait
 import io.vertx.kotlin.ext.sql.callAwait
 import io.vertx.kotlin.ext.sql.closeAwait
 import kotlinx.coroutines.runBlocking
+import net.example.vertx.kotlin.createDbClient
+import net.example.vertx.kotlin.createRouter
+import net.example.vertx.kotlin.initDB
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import java.util.concurrent.TimeUnit
