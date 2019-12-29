@@ -34,6 +34,7 @@ dependencies {
     testRuntimeOnly("org.junit.jupiter", "junit-jupiter-engine", junitVersion)
 
     testImplementation("io.rest-assured", "rest-assured", restAssuredVersion)
+    testImplementation("io.rest-assured", "kotlin-extensions", restAssuredVersion)
     // rest-assured uses slf4j, we need to forward the logs to JUL via  his dependency to avoid warning
     testImplementation("org.slf4j", "slf4j-jdk14", "1.7.30")
 }
