@@ -2,6 +2,7 @@ package net.example.vertx.kotlin
 
 import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
+import io.vertx.core.logging.Logger
 import io.vertx.core.logging.LoggerFactory
 import io.vertx.ext.jdbc.JDBCClient
 import io.vertx.ext.web.Router
@@ -39,6 +40,8 @@ fun createDbClient(vertx: Vertx): JDBCClient {
 
 // in a real project, this would have been handled by some DB migration library (e.g. liquibase)
 suspend fun initDB(dbClient: JDBCClient) {
+    dbClient.callAwait("SET DATABASE TRANSACTION CONTROL MVCC")
+    dbClient.callAwait("SET DATABASE TRANSACTION ROLLBACK ON CONFLICT TRUE")
 
     // This is a simplification of how the money would be stored in real world
     // Money precision and arithmetic depends on currency (e.g. rounding rules are different for different currencies)

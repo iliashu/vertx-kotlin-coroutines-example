@@ -16,11 +16,13 @@ import io.vertx.kotlin.core.json.obj
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import net.example.vertx.kotlin.persistance.AccountRepository
+import net.example.vertx.kotlin.persistance.AccountOperations
 import java.math.BigDecimal
 
 fun createRouter(vertx: Vertx, dbClient: JDBCClient): Router {
     val logger = LoggerFactory.getLogger("router")
-    val accountService = AccountService(dbClient)
+    val accountService = AccountService(AccountRepository(dbClient, AccountOperations.Companion::create))
     return Router.router(vertx).apply {
         post("/accounts").coroutineHandler {
             val account = accountService.createAccount()
