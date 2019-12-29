@@ -8,8 +8,6 @@ import io.vertx.ext.web.Router
 import io.vertx.kotlin.ext.sql.callAwait
 import kotlinx.coroutines.runBlocking
 
-
-
 fun main() = runBlocking {
     val logger = LoggerFactory.getLogger("main")
 

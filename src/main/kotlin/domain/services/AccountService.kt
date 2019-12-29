@@ -10,12 +10,18 @@ import io.vertx.kotlin.core.json.array
 import io.vertx.kotlin.core.json.get
 import io.vertx.kotlin.ext.sql.*
 import net.example.vertx.kotlin.domain.models.Deposit
+import net.example.vertx.kotlin.domain.models.Transfer
 import java.math.BigDecimal
+import java.util.*
 
 class AccountCreationException(accountId: Long) : RuntimeException("Unable to find just created account with id: $accountId")
 class AccountNotFoundException(accountId: Long) : RuntimeException("Unable to find account with id $accountId")
 class FailedToUpdateAccountBalanceException(accountId: Long, newBalance: BigDecimal) : RuntimeException(
         "Failed to update account balance. Account id: $accountId, new balance: ${newBalance.toPlainString()}"
+)
+
+class InsufficientBalanceException(accountId: Long, requiredAmount: BigDecimal, availableAmount: BigDecimal) : RuntimeException(
+        "Insufficient balance to complete operation. Account id: $accountId, required amount: $requiredAmount, available: $availableAmount"
 )
 
 private val log = LoggerFactory.getLogger(AccountService::class.java)
@@ -50,48 +56,14 @@ class AccountService(private val dbClient: JDBCClient) {
         }
     }
 
-    suspend fun deposit(accountId: Long, amount: BigDecimal): Deposit {
-        val connection = dbClient.getConnectionAwait()
-        try {
-            connection.setAutoCommitAwait(false)
-            connection.setTransactionIsolationAwait(TransactionIsolation.READ_COMMITTED)
-            val account = getAccountInternal(connection, accountId) ?: throw AccountNotFoundException(accountId)
+    suspend fun deposit(accountId: Long, amount: BigDecimal): Deposit = transaction("deposit") { connection ->
 
-            val newBalance = account.balance + amount
-            updateAccountBalanceInternal(connection, account.id, newBalance)
+        val account = getAccountInternal(connection, accountId) ?: throw AccountNotFoundException(accountId)
 
-            connection.commitAwait()
+        val newBalance = account.balance + amount
+        updateAccountBalanceInternal(connection, account.id, newBalance)
 
-            return Deposit(amount)
-        } catch (e: Exception) {
-            log.error("Error trying to deposit money to an account (account id: $accountId)", e)
-            connection.rollbackAwait()
-            throw e
-        } finally {
-            connection.closeAwait()
-        }
-    }
-
-    suspend fun withdraw(accountId: Long, amount: BigDecimal): Deposit {
-        val connection = dbClient.getConnectionAwait()
-        try {
-            connection.setAutoCommitAwait(false)
-            connection.setTransactionIsolationAwait(TransactionIsolation.READ_COMMITTED)
-            val account = getAccountInternal(connection, accountId) ?: throw AccountNotFoundException(accountId)
-
-            val newBalance = account.balance + amount
-            updateAccountBalanceInternal(connection, account.id, newBalance)
-
-            connection.commitAwait()
-
-            return Deposit(amount)
-        } catch (e: Exception) {
-            log.error("Error trying to deposit money to an account (account id: $accountId)", e)
-            connection.rollbackAwait()
-            throw e
-        } finally {
-            connection.closeAwait()
-        }
+        Deposit(accountId, amount)
     }
 
     private suspend fun updateAccountBalanceInternal(connection: SQLOperations, accountId: Long, newBalance: BigDecimal) {
@@ -104,11 +76,60 @@ class AccountService(private val dbClient: JDBCClient) {
             throw FailedToUpdateAccountBalanceException(accountId, newBalance)
         }
 
-        assert(update.updated == 1) {"More than one account updated"}
+        assert(update.updated == 1) { "More than one account updated" }
+    }
+
+    suspend fun transfer(sourceAccountId: Long, destinationAccountId: Long, amount: BigDecimal): Transfer = transaction("transfer") { connection ->
+        val sourceAccount = getAccountInternal(connection, sourceAccountId)
+                ?: throw AccountNotFoundException(sourceAccountId)
+        val destinationAccount = getAccountInternal(connection, destinationAccountId)
+                ?: throw AccountNotFoundException(sourceAccountId)
+
+        if (sourceAccount.balance < amount) {
+            throw InsufficientBalanceException(sourceAccount.id, amount, sourceAccount.balance)
+        }
+
+        val sourceAccountNewBalance = sourceAccount.balance - amount
+        updateAccountBalanceInternal(connection, sourceAccount.id, sourceAccountNewBalance)
+
+        val destinationAccountNewBalance = destinationAccount.balance + amount
+        updateAccountBalanceInternal(connection, destinationAccount.id, destinationAccountNewBalance)
+
+        Transfer(
+                sourceAccountId = sourceAccountId,
+                destinationAccountId = destinationAccountId,
+                amount = amount
+        )
+    }
+
+
+    private suspend fun <T> transaction(
+            operationName: String,
+            isolationLevel: TransactionIsolation = TransactionIsolation.READ_COMMITTED,
+            block: suspend (sqlClient: SQLOperations) -> T
+    ): T {
+        // currently this transaction ID is only used for logging
+        val transactionId = UUID.randomUUID()
+
+        val connection = dbClient.getConnectionAwait()
+        try {
+            log.debug("Starting transaction. Transaction id: {0}, operation name: {1}", transactionId, operationName)
+            connection.setAutoCommitAwait(false)
+            connection.setTransactionIsolationAwait(isolationLevel)
+            val result = block(connection)
+            connection.commitAwait()
+
+            return result
+        } catch (e: Exception) {
+            log.error("Failure during transaction {0}, operation name: {1}. Rolling back", e, transactionId, operationName)
+            connection.rollbackAwait()
+            log.error("Rollback successful. Transaction id: {0}, operation name: {1}", e, transactionId, operationName)
+            throw e
+        } finally {
+            connection.closeAwait()
+            log.debug("Transaction finished. Transaction id: {0}, operation name: {1}", transactionId, operationName)
+        }
     }
 
 }
-
-
-
 

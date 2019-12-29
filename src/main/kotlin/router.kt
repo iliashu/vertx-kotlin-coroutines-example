@@ -1,5 +1,6 @@
 package net.example.vertx.kotlin
 
+import domain.services.AccountNotFoundException
 import domain.services.AccountService
 import io.vertx.core.Vertx
 import io.vertx.core.json.Json.encode
@@ -57,6 +58,26 @@ fun createRouter(vertx: Vertx, dbClient: JDBCClient): Router {
                     .end(Json.obj(
                             "amount" to deposit.amount.toPlainString()
                     ).toBuffer())
+        }
+
+        post("/accounts/:accountId/transfers").handler(BodyHandler.create()).coroutineHandler {
+            val sourceAccountId = it.pathParam("accountId").toLong()
+            val amountStr = it.bodyAsJson.get<String?>("amount")
+            val amount = BigDecimal(amountStr)
+            val destinationAccountId = it.bodyAsJson.get<Long>("destinationAccountId")
+
+            try {
+                val deposit = accountService.transfer(sourceAccountId, destinationAccountId, amount)
+                it.response()
+                        .setStatusCode(201)
+                        .putHeader("Content-Type", "application/json")
+                        .end(Json.obj(
+                                "destinationAccountId" to destinationAccountId,
+                                "amount" to deposit.amount.toPlainString()
+                        ).toBuffer())
+            } catch (e: AccountNotFoundException) {
+                it.response().setStatusCode(400).end()
+            }
         }
 
         errorHandler(500) {
