@@ -52,25 +52,25 @@ class AccountRepositoryImpl(
 
         val connection = dbClient.getConnectionAwait()
         try {
-            log.debug("Starting transaction. Transaction id: {0}, operation name: {1}", transactionId, operationName)
+            log.debug("Starting transaction. Transaction id: {}, operation name: {}", transactionId, operationName)
             connection.setAutoCommitAwait(false)
             connection.setTransactionIsolationAwait(isolationLevel)
 
             val wrappedTransaction = operationsFactory(connection)
             val result = block(wrappedTransaction)
 
-            log.debug("Main operation of the transaction completed successfully, committing. Transaction id: {0}, operation name: {1}", transactionId, operationName)
+            log.debug("Main operation of the transaction completed successfully, committing. Transaction id: {}, operation name: {}", transactionId, operationName)
             connection.commitAwait()
 
             return result
         } catch (e: Exception) {
-            log.error("Failure during transaction {0}, operation name: {1}. Rolling back", e, transactionId, operationName)
+            log.error("Failure during transaction {}, operation name: {}. Rolling back", e, transactionId, operationName)
             connection.rollbackAwait()
-            log.error("Rollback successful. Transaction id: {0}, operation name: {1}", transactionId, operationName)
+            log.error("Rollback successful. Transaction id: {}, operation name: {}", transactionId, operationName)
             throw e
         } finally {
             connection.closeAwait()
-            log.debug("Transaction finished. Transaction id: {0}, operation name: {1}", transactionId, operationName)
+            log.debug("Transaction finished. Transaction id: {}, operation name: {}", transactionId, operationName)
         }
     }
 }

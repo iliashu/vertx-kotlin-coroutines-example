@@ -31,7 +31,7 @@ fun main() = runBlocking {
             .requestHandler(router)
             .listen(8080)
 
-    logger.info("Server started http://localhost:{0,number,#}/", server.actualPort())
+    logger.info("Server started http://localhost:{}/", server.actualPort())
 }
 
 fun createDbClient(vertx: Vertx): JDBCClient {
