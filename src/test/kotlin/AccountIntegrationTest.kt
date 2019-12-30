@@ -104,6 +104,31 @@ class AccountIntegrationTest: IntegrationTestBase() {
         }
     }
 
+    @Test
+    fun `transfer fails with 4xx when destination account does not exist`() {
+
+        val fakeAccountId = Long.MAX_VALUE - 1
+        val sourceAccountId = createTestAccount()
+
+        When {
+            get("/accounts/$fakeAccountId")
+        } Then {
+            statusCode(404)
+        }
+
+        Given {
+            contentType("application/json")
+            body(Json.obj(
+                    "destinationAccountId" to fakeAccountId,
+                    "amount" to "100"
+            ).toString())
+        } When {
+            post("/accounts/$sourceAccountId/transfers")
+        } Then {
+            statusCode(400)
+        }
+    }
+
     private fun transfer(sourceAccountId: Int, destinationAccountId: Int, amount: String) {
         Given {
             contentType("application/json")
@@ -119,11 +144,6 @@ class AccountIntegrationTest: IntegrationTestBase() {
             body("destinationAccountId", equalTo(destinationAccountId))
             body("amount", stringEqualToDecimal(amount))
         }
-    }
-
-    @Test
-    fun `transfer from an account to the same account fails with 4xx error`() {
-
     }
 
     private fun deposit(accountId: Int, amount: String) {

@@ -8,9 +8,6 @@ import java.math.BigDecimal
 
 class AccountCreationException(accountId: Long) : RuntimeException("Unable to find just created account with id: $accountId")
 class AccountNotFoundException(accountId: Long) : RuntimeException("Unable to find account with id $accountId")
-class FailedToUpdateAccountBalanceException(accountId: Long, newBalance: BigDecimal) : RuntimeException(
-        "Failed to update account balance. Account id: $accountId, new balance: ${newBalance.toPlainString()}"
-)
 
 class InsufficientBalanceException(accountId: Long, requiredAmount: BigDecimal, availableAmount: BigDecimal) : RuntimeException(
         "Insufficient balance to complete operation. Account id: $accountId, required amount: $requiredAmount, available: $availableAmount"

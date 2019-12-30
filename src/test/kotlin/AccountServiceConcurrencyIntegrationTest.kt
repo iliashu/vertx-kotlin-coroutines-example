@@ -20,7 +20,7 @@ class AccountServiceConcurrencyIntegrationTest : IntegrationTestBase() {
     fun `concurrent deposits do not corrupt data`() = vertxTestWithTimeout {
 
         val controlledTransactions = TransactionFactoryWithDelayControl()
-        val baseRepository = AccountRepository(dbClient, controlledTransactions)
+        val baseRepository = AccountRepository.create(dbClient, controlledTransactions)
 
         val service = AccountService(baseRepository)
 
@@ -46,7 +46,7 @@ class AccountServiceConcurrencyIntegrationTest : IntegrationTestBase() {
     fun `concurrent transfers do not allow customers go into negative balance`() = vertxTestWithTimeout {
 
         val controlledTransactions = TransactionFactoryWithDelayControl()
-        val baseRepository = AccountRepository(dbClient, controlledTransactions)
+        val baseRepository = AccountRepository.create(dbClient, controlledTransactions)
 
         val service = AccountService(baseRepository)
 
@@ -88,7 +88,7 @@ class AccountServiceConcurrencyIntegrationTest : IntegrationTestBase() {
     fun `deadlock transfers are resolved by DB`() = vertxTestWithTimeout(Duration.ofSeconds(100)) {
 
         val controlledTransactions = TransactionFactoryWithDelayControl()
-        val baseRepository = AccountRepository(dbClient, controlledTransactions)
+        val baseRepository = AccountRepository.create(dbClient, controlledTransactions)
 
         val service = AccountService(baseRepository)
 

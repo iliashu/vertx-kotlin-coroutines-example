@@ -22,7 +22,7 @@ import java.math.BigDecimal
 
 fun createRouter(vertx: Vertx, dbClient: JDBCClient): Router {
     val logger = LoggerFactory.getLogger("router")
-    val accountService = AccountService(AccountRepository(dbClient, AccountOperations.Companion::create))
+    val accountService = AccountService(AccountRepository.create(dbClient, AccountOperations.Companion::create))
     return Router.router(vertx).apply {
         post("/accounts").coroutineHandler {
             val account = accountService.createAccount()
@@ -84,6 +84,7 @@ fun createRouter(vertx: Vertx, dbClient: JDBCClient): Router {
 
         errorHandler(500) {
             logger.error("Error during request handling", it.failure())
+            it.response().setStatusCode(500).end()
         }
     }
 }

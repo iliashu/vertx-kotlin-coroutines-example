@@ -31,6 +31,9 @@ dependencies {
 
     testImplementation("org.junit.jupiter", "junit-jupiter-api", junitVersion)
     testImplementation("io.vertx", "vertx-junit5", vertxVersion)
+    testImplementation("org.mockito", "mockito-core", "3.2.4")
+    testImplementation("com.nhaarman.mockitokotlin2", "mockito-kotlin", "2.2.0")
+
     testRuntimeOnly("org.junit.jupiter", "junit-jupiter-engine", junitVersion)
 
     testImplementation("io.rest-assured", "rest-assured", restAssuredVersion)
