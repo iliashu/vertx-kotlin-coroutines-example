@@ -77,6 +77,21 @@ internal class AccountServiceImplTest {
         }
     }
 
+    @Test
+    fun `negative deposit amount is rejected`() {
+
+        val accountId = 1L
+        val operationsMock = mock<AccountOperations> {
+            onBlocking { it.getAccount(accountId) } doReturn Account(accountId, BigDecimal.ZERO)
+        }
+
+        val service = AccountServiceImpl(DummyRepository(operationsMock))
+
+        assertThrowsBlocking<UserInputException> {
+            service.deposit(accountId, BigDecimal("-100"))
+        }
+    }
+
     // not really clear what the expected behaviour would be to zero amount transfer
 
     private inline fun <reified T : Throwable> assertThrowsBlocking(noinline block: suspend () -> Unit): T? {

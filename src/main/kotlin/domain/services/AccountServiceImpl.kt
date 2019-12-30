@@ -9,6 +9,7 @@ import net.example.vertx.kotlin.domain.services.AccountService
 import net.example.vertx.kotlin.persistance.AccountRepository
 
 private val MINIMAL_TRANSFER_AMOUNT: BigDecimal = BigDecimal.ZERO
+private val MINIMAL_DEPOSIT_AMOUNT: BigDecimal = BigDecimal.ZERO
 
 abstract class UserInputException(val fieldName: String, message: String, cause: Exception? = null) :
         RuntimeException(message, cause)
@@ -21,6 +22,7 @@ class InsufficientBalanceException(accountId: Long, requiredAmount: BigDecimal, 
 )
 
 class InvalidTransferAmount(amount: BigDecimal) : UserInputException("amount", "Invalid transfer amount: ${amount.toPlainString()}")
+class InvalidDepositAmount(amount: BigDecimal) : UserInputException("amount", "Invalid deposit amount: ${amount.toPlainString()}")
 
 /**
  * Account service represents business logic of operations with accounts in isolation from persistence layer
@@ -38,6 +40,9 @@ class AccountServiceImpl(private val repository: AccountRepository) : AccountSer
 
     override suspend fun deposit(accountId: Long, amount: BigDecimal): Deposit = repository.transaction("deposit") { connection ->
 
+        if (amount < MINIMAL_DEPOSIT_AMOUNT) {
+            throw InvalidDepositAmount(amount)
+        }
         val account = connection.getAccount(accountId) ?: throw AccountNotFoundException(accountId)
         val newBalance = account.balance + amount
         connection.updateAccountBalanceInternal(account.id, newBalance)
