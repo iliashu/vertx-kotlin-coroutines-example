@@ -1,16 +1,16 @@
 package domain.services
 
 import domain.models.Account
+import java.lang.Exception
+import java.math.BigDecimal
 import net.example.vertx.kotlin.domain.models.Deposit
 import net.example.vertx.kotlin.domain.models.Transfer
 import net.example.vertx.kotlin.domain.services.AccountService
 import net.example.vertx.kotlin.persistance.AccountRepository
-import java.lang.Exception
-import java.math.BigDecimal
 
-private val MINIMAL_TRANSFER_AMOUNT: BigDecimal = BigDecimal.ZERO;
+private val MINIMAL_TRANSFER_AMOUNT: BigDecimal = BigDecimal.ZERO
 
-abstract class UserInputException(val fieldName: String, message: String, cause: Exception? = null):
+abstract class UserInputException(val fieldName: String, message: String, cause: Exception? = null) :
         RuntimeException(message, cause)
 
 class AccountCreationException(accountId: Long) : RuntimeException("Unable to find just created account with id: $accountId")

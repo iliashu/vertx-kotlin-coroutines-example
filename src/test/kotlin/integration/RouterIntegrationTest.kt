@@ -8,10 +8,10 @@ import io.restassured.module.kotlin.extensions.Then
 import io.restassured.module.kotlin.extensions.When
 import io.vertx.core.Vertx
 import io.vertx.junit5.VertxTestContext
+import java.util.concurrent.TimeUnit
 import net.example.vertx.kotlin.createRouter
 import net.example.vertx.kotlin.domain.services.AccountService
 import org.junit.jupiter.api.Test
-import java.util.concurrent.TimeUnit
 
 class RouterIntegrationTest {
 
@@ -24,7 +24,7 @@ class RouterIntegrationTest {
         startRouter(accountService)
 
         When {
-           get("/accounts/1")
+            get("/accounts/1")
         } Then {
             statusCode(500)
         }
@@ -36,8 +36,8 @@ class RouterIntegrationTest {
 
         val testContext = VertxTestContext()
         val server = vertx.createHttpServer()
-                .requestHandler(testedRouter)
-                .listen(0, testContext.completing())
+            .requestHandler(testedRouter)
+            .listen(0, testContext.completing())
 
         testContext.awaitCompletion(5, TimeUnit.SECONDS)
 

@@ -5,6 +5,7 @@ version = "1.0-SNAPSHOT"
 
 plugins {
     kotlin("jvm") version "1.3.61"
+    id("org.jlleitschuh.gradle.ktlint") version "9.1.1"
 }
 
 repositories {
@@ -21,12 +22,12 @@ dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-core", "1.3.3")
 
-    implementation("io.vertx","vertx-core", vertxVersion)
-    implementation("io.vertx","vertx-web", vertxVersion)
-    implementation("io.vertx","vertx-lang-kotlin", vertxVersion)
-    implementation("io.vertx","vertx-lang-kotlin-coroutines", vertxVersion)
-    implementation("io.vertx","vertx-jdbc-client", vertxVersion)
-    
+    implementation("io.vertx", "vertx-core", vertxVersion)
+    implementation("io.vertx", "vertx-web", vertxVersion)
+    implementation("io.vertx", "vertx-lang-kotlin", vertxVersion)
+    implementation("io.vertx", "vertx-lang-kotlin-coroutines", vertxVersion)
+    implementation("io.vertx", "vertx-jdbc-client", vertxVersion)
+
     runtimeOnly("org.hsqldb", "hsqldb", hsqldbVersion)
 
     testImplementation("org.junit.jupiter", "junit-jupiter-api", junitVersion)

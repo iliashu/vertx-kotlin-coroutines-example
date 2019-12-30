@@ -6,18 +6,22 @@ import io.restassured.module.kotlin.extensions.Then
 import io.restassured.module.kotlin.extensions.When
 import io.vertx.kotlin.core.json.Json
 import io.vertx.kotlin.core.json.obj
+import java.math.BigDecimal
+import org.hamcrest.CoreMatchers.allOf
+import org.hamcrest.CoreMatchers.equalTo
+import org.hamcrest.CoreMatchers.notNullValue
 import org.hamcrest.Description
 import org.hamcrest.Matcher
-import org.hamcrest.Matchers.*
+import org.hamcrest.Matchers.greaterThanOrEqualTo
+import org.hamcrest.Matchers.lessThan
 import org.hamcrest.TypeSafeMatcher
 import org.hamcrest.number.BigDecimalCloseTo
 import org.junit.jupiter.api.Test
-import java.math.BigDecimal
 
-class AccountIntegrationTest: IntegrationTestBase() {
+class AccountIntegrationTest : IntegrationTestBase() {
 
     @Test
-    fun `valid account creation does not fail`()  {
+    fun `valid account creation does not fail`() {
         createAccount()
     }
 
@@ -102,7 +106,6 @@ class AccountIntegrationTest: IntegrationTestBase() {
     @Test
     fun `no balance change after transfer to yourself`() {
 
-
         val accountId = createAccount()
         val initialBalance = "100"
         deposit(accountId, initialBalance)
@@ -150,7 +153,7 @@ class AccountIntegrationTest: IntegrationTestBase() {
 
     private fun deposit(accountId: Int, amount: String) {
         Given {
-            body(Json.obj (
+            body(Json.obj(
                 "amount" to amount
             ).toString())
         } When {
@@ -189,7 +192,7 @@ private fun stringEqualToDecimal(decimalString: String): Matcher<String> = strin
 
 private fun stringEqualToDecimal(bigDecimal: BigDecimal): Matcher<String> {
     val matcher = BigDecimalCloseTo(bigDecimal, BigDecimal.ZERO)
-    return object: TypeSafeMatcher<String>() {
+    return object : TypeSafeMatcher<String>() {
         override fun describeTo(description: Description?) {
             matcher.describeTo(description)
         }
@@ -201,10 +204,9 @@ private fun stringEqualToDecimal(bigDecimal: BigDecimal): Matcher<String> {
         override fun describeMismatchSafely(item: String?, mismatchDescription: Description?) {
             matcher.describeMismatchSafely(item?.toBigDecimal(), mismatchDescription)
         }
-
     }
 }
 
 private fun isUserError(): Matcher<Int> {
-    return allOf(greaterThanOrEqualTo(400),lessThan(500))
+    return allOf(greaterThanOrEqualTo(400), lessThan(500))
 }

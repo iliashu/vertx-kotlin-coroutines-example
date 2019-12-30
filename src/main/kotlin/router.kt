@@ -1,7 +1,6 @@
 package net.example.vertx.kotlin
 
 import domain.services.AccountNotFoundException
-import domain.services.AccountServiceImpl
 import io.vertx.core.Vertx
 import io.vertx.core.json.Json.encode
 import io.vertx.core.logging.LoggerFactory
@@ -13,10 +12,10 @@ import io.vertx.kotlin.core.json.Json
 import io.vertx.kotlin.core.json.get
 import io.vertx.kotlin.core.json.obj
 import io.vertx.kotlin.coroutines.dispatcher
+import java.math.BigDecimal
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import net.example.vertx.kotlin.domain.services.AccountService
-import java.math.BigDecimal
 
 fun createRouter(vertx: Vertx, accountService: AccountService): Router {
     val logger = LoggerFactory.getLogger("router")
@@ -85,7 +84,6 @@ fun createRouter(vertx: Vertx, accountService: AccountService): Router {
         }
     }
 }
-
 
 private fun Route.coroutineHandler(fn: suspend (RoutingContext) -> Unit) {
     handler { ctx ->

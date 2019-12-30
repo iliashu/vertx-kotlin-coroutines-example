@@ -4,29 +4,34 @@ import io.vertx.core.logging.LoggerFactory
 import io.vertx.ext.jdbc.JDBCClient
 import io.vertx.ext.sql.SQLOperations
 import io.vertx.ext.sql.TransactionIsolation
-import io.vertx.kotlin.ext.sql.*
-import java.util.*
+import io.vertx.kotlin.ext.sql.closeAwait
+import io.vertx.kotlin.ext.sql.commitAwait
+import io.vertx.kotlin.ext.sql.getConnectionAwait
+import io.vertx.kotlin.ext.sql.rollbackAwait
+import io.vertx.kotlin.ext.sql.setAutoCommitAwait
+import io.vertx.kotlin.ext.sql.setTransactionIsolationAwait
+import java.util.UUID
 
 private val log = LoggerFactory.getLogger(AccountRepository::class.java)
 
-interface AccountRepository: AccountOperations {
+interface AccountRepository : AccountOperations {
     suspend fun <T> transaction(
-            operationName: String,
-            isolationLevel: TransactionIsolation = TransactionIsolation.READ_COMMITTED,
-            block: suspend (operations: AccountOperations) -> T
-    ) : T
+        operationName: String,
+        isolationLevel: TransactionIsolation = TransactionIsolation.READ_COMMITTED,
+        block: suspend (operations: AccountOperations) -> T
+    ): T
 
     companion object {
         fun create(
-                dbClient: JDBCClient,
-                operationsFactory: (SQLOperations) -> AccountOperations = AccountOperations.Companion::create
+            dbClient: JDBCClient,
+            operationsFactory: (SQLOperations) -> AccountOperations = AccountOperations.Companion::create
         ): AccountRepository = AccountRepositoryImpl(dbClient, operationsFactory)
     }
 }
 
 class AccountRepositoryImpl(
-        private val dbClient: JDBCClient,
-        private val operationsFactory: (SQLOperations) -> AccountOperations
+    private val dbClient: JDBCClient,
+    private val operationsFactory: (SQLOperations) -> AccountOperations
 ) : AccountRepository, AccountOperations by operationsFactory(dbClient) {
 
     /**
@@ -38,9 +43,9 @@ class AccountRepositoryImpl(
      * method into the repository.
      */
     override suspend fun <T> transaction(
-            operationName: String,
-            isolationLevel: TransactionIsolation,
-            block: suspend (operations: AccountOperations) -> T
+        operationName: String,
+        isolationLevel: TransactionIsolation,
+        block: suspend (operations: AccountOperations) -> T
     ): T {
         // currently this transaction ID is only used for logging
         val transactionId = UUID.randomUUID()
@@ -69,4 +74,3 @@ class AccountRepositoryImpl(
         }
     }
 }
-

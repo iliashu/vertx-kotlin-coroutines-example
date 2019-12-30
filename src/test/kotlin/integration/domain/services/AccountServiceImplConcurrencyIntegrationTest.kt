@@ -1,19 +1,24 @@
 package integration.domain.services
 
-import integration.IntegrationTestBase
 import domain.models.Account
 import domain.services.AccountServiceImpl
+import integration.IntegrationTestBase
 import io.vertx.ext.sql.SQLOperations
-import kotlinx.coroutines.*
-import net.example.vertx.kotlin.persistance.AccountRepository
+import java.math.BigDecimal
+import java.time.Duration
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
 import net.example.vertx.kotlin.persistance.AccountOperations
+import net.example.vertx.kotlin.persistance.AccountRepository
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.number.BigDecimalCloseTo.closeTo
 import org.hamcrest.number.OrderingComparison.greaterThan
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
-import java.math.BigDecimal
-import java.time.Duration
 
 // all of these tests are somewhat useless unless they are executed against a real DB, as
 // collision and deadlock resolution strategies differ from DB to DB
@@ -157,8 +162,8 @@ class TransactionFactoryWithDelayControl : (SQLOperations) -> AccountOperations 
     }
 
     suspend fun pauseAfterBalanceUpdate(
-            accountId: Long? = null,
-            block: suspend () -> Unit
+        accountId: Long? = null,
+        block: suspend () -> Unit
     ): Pair<CompletableDeferred<Unit>, Job> {
 
         val pause = CompletableDeferred<Unit>()
@@ -176,5 +181,4 @@ class TransactionFactoryWithDelayControl : (SQLOperations) -> AccountOperations 
         pauseAccountIdFilter = null
         return Pair(pause, job)
     }
-
 }

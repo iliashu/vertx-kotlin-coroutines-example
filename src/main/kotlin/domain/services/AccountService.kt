@@ -1,9 +1,9 @@
 package net.example.vertx.kotlin.domain.services
 
 import domain.models.Account
+import java.math.BigDecimal
 import net.example.vertx.kotlin.domain.models.Deposit
 import net.example.vertx.kotlin.domain.models.Transfer
-import java.math.BigDecimal
 
 interface AccountService {
     suspend fun createAccount(): Account

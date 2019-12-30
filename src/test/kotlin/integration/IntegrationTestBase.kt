@@ -8,6 +8,8 @@ import io.vertx.kotlin.core.closeAwait
 import io.vertx.kotlin.coroutines.dispatcher
 import io.vertx.kotlin.ext.sql.callAwait
 import io.vertx.kotlin.ext.sql.closeAwait
+import java.time.Duration
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import net.example.vertx.kotlin.createDbClient
@@ -16,8 +18,6 @@ import net.example.vertx.kotlin.initDB
 import net.example.vertx.kotlin.persistance.AccountRepository
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
-import java.time.Duration
-import java.util.concurrent.TimeUnit
 
 // In the real world, you should try to use real database for your integration tests
 // Testcontainers library is a great tool that allows you to start a Docker container with DB from within the test
