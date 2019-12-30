@@ -12,6 +12,7 @@ import java.time.Duration
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
+import net.example.vertx.kotlin.controllers.AccountController
 import net.example.vertx.kotlin.createDbClient
 import net.example.vertx.kotlin.createRouter
 import net.example.vertx.kotlin.initDB
@@ -36,7 +37,8 @@ abstract class IntegrationTestBase {
         dbClient = createDbClient(vertx)
         runBlocking { initDB(dbClient) }
         val accountService = AccountServiceImpl(AccountRepository.create(dbClient))
-        val testedRouter = createRouter(vertx, accountService)
+        val controller = AccountController(accountService)
+        val testedRouter = createRouter(vertx, controller)
 
         testContext = VertxTestContext()
         val server = vertx.createHttpServer()

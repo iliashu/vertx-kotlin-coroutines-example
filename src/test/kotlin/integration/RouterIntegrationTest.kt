@@ -8,6 +8,7 @@ import io.restassured.module.kotlin.extensions.Then
 import io.restassured.module.kotlin.extensions.When
 import io.vertx.core.Vertx
 import io.vertx.junit5.VertxTestContext
+import net.example.vertx.kotlin.controllers.AccountController
 import java.util.concurrent.TimeUnit
 import net.example.vertx.kotlin.createRouter
 import net.example.vertx.kotlin.domain.services.AccountService
@@ -32,7 +33,8 @@ class RouterIntegrationTest {
 
     private fun startRouter(accountService: AccountService) {
         val vertx = Vertx.vertx()
-        val testedRouter = createRouter(vertx, accountService)
+        val controller = AccountController(accountService)
+        val testedRouter = createRouter(vertx, controller)
 
         val testContext = VertxTestContext()
         val server = vertx.createHttpServer()

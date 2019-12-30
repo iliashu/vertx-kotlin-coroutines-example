@@ -8,6 +8,7 @@ import io.vertx.ext.jdbc.JDBCClient
 import io.vertx.ext.web.Router
 import io.vertx.kotlin.ext.sql.callAwait
 import kotlinx.coroutines.runBlocking
+import net.example.vertx.kotlin.controllers.AccountController
 import net.example.vertx.kotlin.persistance.AccountOperations
 import net.example.vertx.kotlin.persistance.AccountRepository
 
@@ -22,8 +23,8 @@ fun main() = runBlocking {
     initDB(dbClient)
 
     val accountService = AccountServiceImpl(AccountRepository.create(dbClient, AccountOperations.Companion::create))
-
-    val router: Router = createRouter(vertx, accountService)
+    val controller = AccountController(accountService)
+    val router: Router = createRouter(vertx, controller)
 
     logger.info("Starting Vert.x")
 
