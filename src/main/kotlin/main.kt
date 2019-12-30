@@ -12,7 +12,6 @@ import net.example.vertx.kotlin.controllers.AccountController
 import net.example.vertx.kotlin.persistance.AccountOperations
 import net.example.vertx.kotlin.persistance.AccountRepository
 
-// for a bigger app, dependency resolution should be done via DI, but this example is too small for this to make sense
 fun main() = runBlocking {
     val logger = LoggerFactory.getLogger("main")
 
@@ -22,7 +21,10 @@ fun main() = runBlocking {
 
     initDB(dbClient)
 
-    val accountService = AccountServiceImpl(AccountRepository.create(dbClient, AccountOperations.Companion::create))
+    // for a bigger app, dependency resolution should be done via DI, but this all of our dependencies
+    // adding a DI would make things a lot more complicated and heavy-weight
+    val repository = AccountRepository.create(dbClient, AccountOperations.Companion::create)
+    val accountService = AccountServiceImpl(repository)
     val controller = AccountController(accountService)
     val router: Router = createRouter(vertx, controller)
 

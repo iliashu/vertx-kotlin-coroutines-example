@@ -141,8 +141,8 @@ class TransactionFactoryWithDelayControl : (SQLOperations) -> AccountOperations 
     override fun invoke(connection: SQLOperations): AccountOperations {
         val baseTransaction = AccountOperations.create(connection)
         return object : AccountOperations {
-            override suspend fun updateAccountBalanceInternal(accountId: Long, newBalance: BigDecimal) {
-                val result = baseTransaction.updateAccountBalanceInternal(accountId, newBalance)
+            override suspend fun updateAccountBalance(accountId: Long, newBalance: BigDecimal) {
+                val result = baseTransaction.updateAccountBalance(accountId, newBalance)
                 val pause = pauseCompletedCompletionSource
                 if (pause != null && pauseAccountIdFilter!!(accountId)) {
                     accountUpdatedCompletionSource!!.complete(Unit)
@@ -151,12 +151,12 @@ class TransactionFactoryWithDelayControl : (SQLOperations) -> AccountOperations 
                 return result
             }
 
-            override suspend fun getAccount(accountId: Long): Account? {
-                return baseTransaction.getAccount(accountId)
+            override suspend fun getAccountById(accountId: Long): Account? {
+                return baseTransaction.getAccountById(accountId)
             }
 
-            override suspend fun createAccountInternal(): Long {
-                return baseTransaction.createAccountInternal()
+            override suspend fun createAccount(): Long {
+                return baseTransaction.createAccount()
             }
         }
     }

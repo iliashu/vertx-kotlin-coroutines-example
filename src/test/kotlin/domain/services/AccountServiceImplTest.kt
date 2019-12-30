@@ -22,8 +22,8 @@ internal class AccountServiceImplTest {
     fun `exception is thrown when unable to retrieve just created account`() {
 
         val operationsMock = mock<AccountOperations> {
-            onBlocking { it.createAccountInternal() } doReturn 1
-            onBlocking { it.getAccount(1) } doReturn null
+            onBlocking { it.createAccount() } doReturn 1
+            onBlocking { it.getAccountById(1) } doReturn null
         }
 
         val service = AccountServiceImpl(DummyRepository(operationsMock))
@@ -40,8 +40,8 @@ internal class AccountServiceImplTest {
         val destinationAccountId = 2L
         val balance = BigDecimal("100.00")
         val operationsMock = mock<AccountOperations> {
-            onBlocking { it.getAccount(accountId) } doReturn Account(accountId, balance)
-            onBlocking { it.getAccount(destinationAccountId) } doReturn Account(destinationAccountId, BigDecimal.ZERO)
+            onBlocking { it.getAccountById(accountId) } doReturn Account(accountId, balance)
+            onBlocking { it.getAccountById(destinationAccountId) } doReturn Account(destinationAccountId, BigDecimal.ZERO)
         }
 
         val service = AccountServiceImpl(DummyRepository(operationsMock))
@@ -51,11 +51,11 @@ internal class AccountServiceImplTest {
         }
 
         verifyBlocking(operationsMock, times(1)) {
-            operationsMock.updateAccountBalanceInternal(eq(accountId), equalToDecimal(BigDecimal.ZERO))
+            operationsMock.updateAccountBalance(eq(accountId), equalToDecimal(BigDecimal.ZERO))
         }
 
         verifyBlocking(operationsMock, times(1)) {
-            operationsMock.updateAccountBalanceInternal(eq(destinationAccountId), equalToDecimal(balance))
+            operationsMock.updateAccountBalance(eq(destinationAccountId), equalToDecimal(balance))
         }
     }
 
@@ -66,8 +66,8 @@ internal class AccountServiceImplTest {
         val destinationAccountId = 2L
         val balance = BigDecimal("100.00")
         val operationsMock = mock<AccountOperations> {
-            onBlocking { it.getAccount(accountId) } doReturn Account(accountId, balance)
-            onBlocking { it.getAccount(destinationAccountId) } doReturn Account(destinationAccountId, BigDecimal.ZERO)
+            onBlocking { it.getAccountById(accountId) } doReturn Account(accountId, balance)
+            onBlocking { it.getAccountById(destinationAccountId) } doReturn Account(destinationAccountId, BigDecimal.ZERO)
         }
 
         val service = AccountServiceImpl(DummyRepository(operationsMock))
@@ -82,7 +82,7 @@ internal class AccountServiceImplTest {
 
         val accountId = 1L
         val operationsMock = mock<AccountOperations> {
-            onBlocking { it.getAccount(accountId) } doReturn Account(accountId, BigDecimal.ZERO)
+            onBlocking { it.getAccountById(accountId) } doReturn Account(accountId, BigDecimal.ZERO)
         }
 
         val service = AccountServiceImpl(DummyRepository(operationsMock))

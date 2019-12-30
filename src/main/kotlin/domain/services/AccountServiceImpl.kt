@@ -11,18 +11,18 @@ import net.example.vertx.kotlin.persistance.AccountRepository
 private val MINIMAL_TRANSFER_AMOUNT: BigDecimal = BigDecimal.ZERO
 private val MINIMAL_DEPOSIT_AMOUNT: BigDecimal = BigDecimal.ZERO
 
-abstract class UserInputException(val fieldName: String, message: String, cause: Exception? = null) :
+abstract class UserInputException(message: String, cause: Exception? = null) :
         RuntimeException(message, cause)
 
 class AccountCreationException(accountId: Long) : RuntimeException("Unable to find just created account with id: $accountId")
-class AccountNotFoundException(accountId: Long, accountPurpose: String = "account") : UserInputException(accountPurpose, "Unable to find account with id $accountId")
+class AccountNotFoundException(accountId: Long) : UserInputException("Unable to find account with id $accountId")
 
 class InsufficientBalanceException(accountId: Long, requiredAmount: BigDecimal, availableAmount: BigDecimal) : RuntimeException(
         "Insufficient balance to complete operation. Account id: $accountId, required amount: $requiredAmount, available: $availableAmount"
 )
 
-class InvalidTransferAmount(amount: BigDecimal) : UserInputException("amount", "Invalid transfer amount: ${amount.toPlainString()}")
-class InvalidDepositAmount(amount: BigDecimal) : UserInputException("amount", "Invalid deposit amount: ${amount.toPlainString()}")
+class InvalidTransferAmount(amount: BigDecimal) : UserInputException("Invalid transfer amount: ${amount.toPlainString()}")
+class InvalidDepositAmount(amount: BigDecimal) : UserInputException("Invalid deposit amount: ${amount.toPlainString()}")
 
 /**
  * Account service represents business logic of operations with accounts in isolation from persistence layer
@@ -30,12 +30,12 @@ class InvalidDepositAmount(amount: BigDecimal) : UserInputException("amount", "I
 class AccountServiceImpl(private val repository: AccountRepository) : AccountService {
 
     override suspend fun createAccount(): Account = repository.transaction("create account") { connection ->
-        val accountId = connection.createAccountInternal()
-        connection.getAccount(accountId) ?: throw AccountCreationException(accountId)
+        val accountId = connection.createAccount()
+        connection.getAccountById(accountId) ?: throw AccountCreationException(accountId)
     }
 
     override suspend fun getAccountById(accountId: Long): Account? {
-        return repository.getAccount(accountId)
+        return repository.getAccountById(accountId)
     }
 
     override suspend fun deposit(accountId: Long, amount: BigDecimal): Deposit = repository.transaction("deposit") { connection ->
@@ -43,9 +43,9 @@ class AccountServiceImpl(private val repository: AccountRepository) : AccountSer
         if (amount < MINIMAL_DEPOSIT_AMOUNT) {
             throw InvalidDepositAmount(amount)
         }
-        val account = connection.getAccount(accountId) ?: throw AccountNotFoundException(accountId)
+        val account = connection.getAccountById(accountId) ?: throw AccountNotFoundException(accountId)
         val newBalance = account.balance + amount
-        connection.updateAccountBalanceInternal(account.id, newBalance)
+        connection.updateAccountBalance(account.id, newBalance)
         Deposit(accountId, amount)
     }
 
@@ -56,21 +56,21 @@ class AccountServiceImpl(private val repository: AccountRepository) : AccountSer
                 throw InvalidTransferAmount(amount)
             }
 
-            val sourceAccount = connection.getAccount(sourceAccountId)
-                    ?: throw AccountNotFoundException(sourceAccountId, "source account")
+            val sourceAccount = connection.getAccountById(sourceAccountId)
+                    ?: throw AccountNotFoundException(sourceAccountId)
 
             if (sourceAccount.balance < amount) {
                 throw InsufficientBalanceException(sourceAccount.id, amount, sourceAccount.balance)
             }
 
             val sourceAccountNewBalance = sourceAccount.balance - amount
-            connection.updateAccountBalanceInternal(sourceAccount.id, sourceAccountNewBalance)
+            connection.updateAccountBalance(sourceAccount.id, sourceAccountNewBalance)
 
-            val destinationAccount = connection.getAccount(destinationAccountId)
-                    ?: throw AccountNotFoundException(sourceAccountId, "destination account")
+            val destinationAccount = connection.getAccountById(destinationAccountId)
+                    ?: throw AccountNotFoundException(sourceAccountId)
 
             val destinationAccountNewBalance = destinationAccount.balance + amount
-            connection.updateAccountBalanceInternal(destinationAccount.id, destinationAccountNewBalance)
+            connection.updateAccountBalance(destinationAccount.id, destinationAccountNewBalance)
 
             Transfer(
                     sourceAccountId = sourceAccountId,
