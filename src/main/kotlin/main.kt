@@ -1,14 +1,17 @@
 package net.example.vertx.kotlin
 
+import domain.services.AccountServiceImpl
 import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
-import io.vertx.core.logging.Logger
 import io.vertx.core.logging.LoggerFactory
 import io.vertx.ext.jdbc.JDBCClient
 import io.vertx.ext.web.Router
 import io.vertx.kotlin.ext.sql.callAwait
 import kotlinx.coroutines.runBlocking
+import net.example.vertx.kotlin.persistance.AccountOperations
+import net.example.vertx.kotlin.persistance.AccountRepository
 
+// for a bigger app, dependency resolution should be done via DI, but this example is too small for this to make sense
 fun main() = runBlocking {
     val logger = LoggerFactory.getLogger("main")
 
@@ -18,7 +21,9 @@ fun main() = runBlocking {
 
     initDB(dbClient)
 
-    val router: Router = createRouter(vertx, dbClient)
+    val accountService = AccountServiceImpl(AccountRepository.create(dbClient, AccountOperations.Companion::create))
+
+    val router: Router = createRouter(vertx, accountService)
 
     logger.info("Starting Vert.x")
 
@@ -40,9 +45,6 @@ fun createDbClient(vertx: Vertx): JDBCClient {
 
 // in a real project, this would have been handled by some DB migration library (e.g. liquibase)
 suspend fun initDB(dbClient: JDBCClient) {
-    dbClient.callAwait("SET DATABASE TRANSACTION CONTROL MVCC")
-    dbClient.callAwait("SET DATABASE TRANSACTION ROLLBACK ON CONFLICT TRUE")
-
     // This is a simplification of how the money would be stored in real world
     // Money precision and arithmetic depends on currency (e.g. rounding rules are different for different currencies)
     // Ideally, we should store money as a big integer with precision fixed on per-currency basis

@@ -1,4 +1,5 @@
-
+package integration
+import domain.services.AccountServiceImpl
 import io.restassured.RestAssured
 import io.vertx.core.Vertx
 import io.vertx.ext.jdbc.JDBCClient
@@ -12,6 +13,7 @@ import kotlinx.coroutines.withTimeout
 import net.example.vertx.kotlin.createDbClient
 import net.example.vertx.kotlin.createRouter
 import net.example.vertx.kotlin.initDB
+import net.example.vertx.kotlin.persistance.AccountRepository
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import java.time.Duration
@@ -33,7 +35,8 @@ abstract class IntegrationTestBase {
         vertx = Vertx.vertx()
         dbClient = createDbClient(vertx)
         runBlocking { initDB(dbClient) }
-        val testedRouter = createRouter(vertx, dbClient)
+        val accountService = AccountServiceImpl(AccountRepository.create(dbClient))
+        val testedRouter = createRouter(vertx, accountService)
 
         testContext = VertxTestContext()
         val server = vertx.createHttpServer()

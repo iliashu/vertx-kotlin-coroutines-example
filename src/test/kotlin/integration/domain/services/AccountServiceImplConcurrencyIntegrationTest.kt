@@ -1,5 +1,8 @@
+package integration.domain.services
+
+import integration.IntegrationTestBase
 import domain.models.Account
-import domain.services.AccountService
+import domain.services.AccountServiceImpl
 import io.vertx.ext.sql.SQLOperations
 import kotlinx.coroutines.*
 import net.example.vertx.kotlin.persistance.AccountRepository
@@ -14,7 +17,7 @@ import java.time.Duration
 
 // all of these tests are somewhat useless unless they are executed against a real DB, as
 // collision and deadlock resolution strategies differ from DB to DB
-class AccountServiceConcurrencyIntegrationTest : IntegrationTestBase() {
+class AccountServiceImplConcurrencyIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun `concurrent deposits do not corrupt data`() = vertxTestWithTimeout {
@@ -22,7 +25,7 @@ class AccountServiceConcurrencyIntegrationTest : IntegrationTestBase() {
         val controlledTransactions = TransactionFactoryWithDelayControl()
         val baseRepository = AccountRepository.create(dbClient, controlledTransactions)
 
-        val service = AccountService(baseRepository)
+        val service = AccountServiceImpl(baseRepository)
 
         val account = service.createAccount()
 
@@ -48,7 +51,7 @@ class AccountServiceConcurrencyIntegrationTest : IntegrationTestBase() {
         val controlledTransactions = TransactionFactoryWithDelayControl()
         val baseRepository = AccountRepository.create(dbClient, controlledTransactions)
 
-        val service = AccountService(baseRepository)
+        val service = AccountServiceImpl(baseRepository)
 
         val sourceAccount = service.createAccount()
         val destinationAccount = service.createAccount()
@@ -84,13 +87,13 @@ class AccountServiceConcurrencyIntegrationTest : IntegrationTestBase() {
     }
 
     @Test
-    @Disabled("HSQLDB actually hangs on this test when running in in-memory mode =(")
+    @Disabled("HSQLDB actually hangs on this test when running in in-memory mode, but I don't want to switch to another DB for this simple project")
     fun `deadlock transfers are resolved by DB`() = vertxTestWithTimeout(Duration.ofSeconds(100)) {
 
         val controlledTransactions = TransactionFactoryWithDelayControl()
         val baseRepository = AccountRepository.create(dbClient, controlledTransactions)
 
-        val service = AccountService(baseRepository)
+        val service = AccountServiceImpl(baseRepository)
 
         val account1 = service.createAccount()
         val account2 = service.createAccount()
@@ -122,7 +125,7 @@ class AccountServiceConcurrencyIntegrationTest : IntegrationTestBase() {
 }
 
 /**
- * Class to introduce a controlled race-condition for account updates
+ * An ugly class that allows to introduce a controlled race-condition for account updates
  */
 class TransactionFactoryWithDelayControl : (SQLOperations) -> AccountOperations {
 
@@ -135,11 +138,10 @@ class TransactionFactoryWithDelayControl : (SQLOperations) -> AccountOperations 
         return object : AccountOperations {
             override suspend fun updateAccountBalanceInternal(accountId: Long, newBalance: BigDecimal) {
                 val result = baseTransaction.updateAccountBalanceInternal(accountId, newBalance)
-                val pause = pauseCompletedCompletionSource;
+                val pause = pauseCompletedCompletionSource
                 if (pause != null && pauseAccountIdFilter!!(accountId)) {
                     accountUpdatedCompletionSource!!.complete(Unit)
                     pause.await()
-
                 }
                 return result
             }

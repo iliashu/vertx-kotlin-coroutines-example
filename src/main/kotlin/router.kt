@@ -1,11 +1,10 @@
 package net.example.vertx.kotlin
 
 import domain.services.AccountNotFoundException
-import domain.services.AccountService
+import domain.services.AccountServiceImpl
 import io.vertx.core.Vertx
 import io.vertx.core.json.Json.encode
 import io.vertx.core.logging.LoggerFactory
-import io.vertx.ext.jdbc.JDBCClient
 import io.vertx.ext.web.Route
 import io.vertx.ext.web.Router
 import io.vertx.ext.web.RoutingContext
@@ -16,13 +15,11 @@ import io.vertx.kotlin.core.json.obj
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import net.example.vertx.kotlin.persistance.AccountRepository
-import net.example.vertx.kotlin.persistance.AccountOperations
+import net.example.vertx.kotlin.domain.services.AccountService
 import java.math.BigDecimal
 
-fun createRouter(vertx: Vertx, dbClient: JDBCClient): Router {
+fun createRouter(vertx: Vertx, accountService: AccountService): Router {
     val logger = LoggerFactory.getLogger("router")
-    val accountService = AccountService(AccountRepository.create(dbClient, AccountOperations.Companion::create))
     return Router.router(vertx).apply {
         post("/accounts").coroutineHandler {
             val account = accountService.createAccount()
