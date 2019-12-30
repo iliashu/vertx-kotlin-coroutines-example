@@ -27,11 +27,11 @@ fun main() = runBlocking {
 
     logger.info("Starting Vert.x")
 
-    vertx.createHttpServer()
+    val server = vertx.createHttpServer()
             .requestHandler(router)
             .listen(8080)
 
-    logger.info("Shutting down")
+    logger.info("Server started http://localhost:{0,number,#}/", server.actualPort())
 }
 
 fun createDbClient(vertx: Vertx): JDBCClient {

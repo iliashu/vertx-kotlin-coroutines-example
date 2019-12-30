@@ -1,11 +1,13 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 group = "task"
-version = "1.0-SNAPSHOT"
+version = "1.0"
 
 plugins {
+    application
     kotlin("jvm") version "1.3.61"
     id("org.jlleitschuh.gradle.ktlint") version "9.1.1"
+    id("com.github.johnrengelman.shadow") version "5.2.0"
 }
 
 repositories {
@@ -41,6 +43,10 @@ dependencies {
     testImplementation("io.rest-assured", "kotlin-extensions", restAssuredVersion)
     // rest-assured uses slf4j, we need to forward the logs to JUL via  his dependency to avoid warning
     testImplementation("org.slf4j", "slf4j-jdk14", "1.7.30")
+}
+
+application {
+    mainClassName = "net.example.vertx.kotlin.MainKt"
 }
 
 tasks {
