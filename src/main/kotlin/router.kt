@@ -1,8 +1,9 @@
 package net.example.vertx.kotlin
 
+import domain.models.Account
 import domain.services.AccountNotFoundException
 import io.vertx.core.Vertx
-import io.vertx.core.json.Json.encode
+import io.vertx.core.buffer.Buffer
 import io.vertx.core.logging.LoggerFactory
 import io.vertx.ext.web.Route
 import io.vertx.ext.web.Router
@@ -12,10 +13,10 @@ import io.vertx.kotlin.core.json.Json
 import io.vertx.kotlin.core.json.get
 import io.vertx.kotlin.core.json.obj
 import io.vertx.kotlin.coroutines.dispatcher
-import java.math.BigDecimal
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import net.example.vertx.kotlin.domain.services.AccountService
+import java.math.BigDecimal
 
 fun createRouter(vertx: Vertx, accountService: AccountService): Router {
     val logger = LoggerFactory.getLogger("router")
@@ -23,9 +24,9 @@ fun createRouter(vertx: Vertx, accountService: AccountService): Router {
         post("/accounts").coroutineHandler {
             val account = accountService.createAccount()
             it.response()
-                    .setStatusCode(201)
-                    .putHeader("Content-Type", "application/json")
-                    .end(encode(account))
+                .setStatusCode(201)
+                .putHeader("Content-Type", "application/json")
+                .end(encodeAccount(account))
         }
 
         get("/accounts/:accountId").coroutineHandler {
@@ -33,12 +34,9 @@ fun createRouter(vertx: Vertx, accountService: AccountService): Router {
             val account = accountService.getAccountById(accountId)
             if (account != null) {
                 it.response()
-                        .setStatusCode(200)
-                        .putHeader("Content-Type", "application/json")
-                        .end(Json.obj(
-                                "id" to account.id,
-                                "amount" to account.balance.toPlainString()
-                        ).toBuffer())
+                    .setStatusCode(200)
+                    .putHeader("Content-Type", "application/json")
+                    .end(encodeAccount(account))
             } else {
                 it.response().setStatusCode(404).end()
             }
@@ -51,11 +49,11 @@ fun createRouter(vertx: Vertx, accountService: AccountService): Router {
 
             val deposit = accountService.deposit(accountId, amount)
             it.response()
-                    .setStatusCode(201)
-                    .putHeader("Content-Type", "application/json")
-                    .end(Json.obj(
-                            "amount" to deposit.amount.toPlainString()
-                    ).toBuffer())
+                .setStatusCode(201)
+                .putHeader("Content-Type", "application/json")
+                .end(Json.obj(
+                    "amount" to deposit.amount.toPlainString()
+                ).toBuffer())
         }
 
         post("/accounts/:accountId/transfers").handler(BodyHandler.create()).coroutineHandler {
@@ -67,12 +65,12 @@ fun createRouter(vertx: Vertx, accountService: AccountService): Router {
             try {
                 val deposit = accountService.transfer(sourceAccountId, destinationAccountId, amount)
                 it.response()
-                        .setStatusCode(201)
-                        .putHeader("Content-Type", "application/json")
-                        .end(Json.obj(
-                                "destinationAccountId" to destinationAccountId,
-                                "amount" to deposit.amount.toPlainString()
-                        ).toBuffer())
+                    .setStatusCode(201)
+                    .putHeader("Content-Type", "application/json")
+                    .end(Json.obj(
+                        "destinationAccountId" to destinationAccountId,
+                        "amount" to deposit.amount.toPlainString()
+                    ).toBuffer())
             } catch (e: AccountNotFoundException) {
                 it.response().setStatusCode(400).end()
             }
@@ -84,6 +82,11 @@ fun createRouter(vertx: Vertx, accountService: AccountService): Router {
         }
     }
 }
+
+fun encodeAccount(account: Account): Buffer = Json.obj(
+    "id" to account.id,
+    "balance" to account.balance.toPlainString()
+).toBuffer()
 
 private fun Route.coroutineHandler(fn: suspend (RoutingContext) -> Unit) {
     handler { ctx ->

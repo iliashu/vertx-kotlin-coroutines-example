@@ -1,0 +1,120 @@
+openapi: 3.0.1
+info:
+  title: Example
+  description: Example Vert.x + Kotlin Coroutines + JDBC project
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080/
+paths:
+  /accounts:
+    post:
+      summary: Create a new account
+      operationId: createAccount
+      responses:
+        201:
+          description: Account created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+  /accounts/{accountId}:
+    get:
+      summary: Get account information, including balance
+      operationId: getAccount
+      parameters:
+        - in: path
+          name: accountId
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        404:
+          description: No account with such id
+  /accounts/{accountId}/deposits:
+    post:
+      summary: Deposit money into an account
+      operationId: deposit
+      parameters:
+        - in: path
+          name: accountId
+          description: account to deposit money into
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Deposit'
+      responses:
+        201:
+          description: success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deposit'
+        404:
+          description: No account with such id
+        400:
+          description: Invalid deposit details
+  /accounts/{sourceAccountId}/transfers:
+    post:
+      summary: Deposit money into an account
+      operationId: transfer
+      parameters:
+        - in: path
+          name: sourceAccountId
+          description: account to transfer money FROM
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Transfer'
+      responses:
+        201:
+          description: success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transfer'
+        400:
+          description: Invalid transfer details
+components:
+  schemas:
+    Account:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/AccountId'
+        balance:
+          $ref: '#/components/schemas/Money'
+    Deposit:
+      type: object
+      properties:
+        amount:
+          $ref: '#/components/schemas/Money'
+    Transfer:
+      type: object
+      properties:
+        destinationAccountId:
+          $ref: '#/components/schemas/AccountId'
+        amount:
+          $ref: '#/components/schemas/Money'
+    AccountId:
+      type: integer
+      format: int64
+    Money:
+      description: |
+        Decimal, stored as string to avoid floating-point issues
+      type: string
+      format: decimal
+      pattern: '^\d*\.?\d+$'

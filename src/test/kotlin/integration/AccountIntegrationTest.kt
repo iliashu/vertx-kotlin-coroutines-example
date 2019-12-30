@@ -1,12 +1,12 @@
 package integration
 
+import com.atlassian.oai.validator.restassured.OpenApiValidationFilter
 import io.restassured.module.kotlin.extensions.Extract
 import io.restassured.module.kotlin.extensions.Given
 import io.restassured.module.kotlin.extensions.Then
 import io.restassured.module.kotlin.extensions.When
 import io.vertx.kotlin.core.json.Json
 import io.vertx.kotlin.core.json.obj
-import java.math.BigDecimal
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.notNullValue
@@ -17,8 +17,12 @@ import org.hamcrest.Matchers.lessThan
 import org.hamcrest.TypeSafeMatcher
 import org.hamcrest.number.BigDecimalCloseTo
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
+import java.nio.file.Path
 
 class AccountIntegrationTest : IntegrationTestBase() {
+
+    private val apiValidationSchema: OpenApiValidationFilter = OpenApiValidationFilter(Path.of("openapi.yaml").toUri().toString())
 
     @Test
     fun `valid account creation does not fail`() {
@@ -28,7 +32,9 @@ class AccountIntegrationTest : IntegrationTestBase() {
     @Test
     fun `can retrieve valid account after creation`() {
         val accountId = createAccount()
-        When {
+        Given {
+            filter(apiValidationSchema)
+        } When {
             get("/accounts/$accountId")
         } Then {
             statusCode(200)
@@ -59,16 +65,16 @@ class AccountIntegrationTest : IntegrationTestBase() {
 
         val transferAmount = "8.00"
         Given {
+            filter(apiValidationSchema)
             contentType("application/json")
             body(Json.obj(
-                    "destinationAccountId" to destinationAccountId,
-                    "amount" to transferAmount
+                "destinationAccountId" to destinationAccountId,
+                "amount" to transferAmount
             ).toString())
         } When {
             post("/accounts/$sourceAccountId/transfers")
         } Then {
             statusCode(201)
-            contentType("application/json")
             body("destinationAccountId", equalTo(destinationAccountId))
             body("amount", stringEqualToDecimal(transferAmount))
         }
@@ -84,17 +90,20 @@ class AccountIntegrationTest : IntegrationTestBase() {
         val fakeAccountId = Long.MAX_VALUE - 1
         val destinationAccountId = createAccount()
 
-        When {
+        Given {
+            filter(apiValidationSchema)
+        } When {
             get("/accounts/$fakeAccountId")
         } Then {
             statusCode(404)
         }
 
         Given {
+            filter(apiValidationSchema)
             contentType("application/json")
             body(Json.obj(
-                    "destinationAccountId" to destinationAccountId,
-                    "amount" to "100"
+                "destinationAccountId" to destinationAccountId,
+                "amount" to "100"
             ).toString())
         } When {
             post("/accounts/$fakeAccountId/transfers")
@@ -111,10 +120,11 @@ class AccountIntegrationTest : IntegrationTestBase() {
         deposit(accountId, initialBalance)
 
         Given {
+            filter(apiValidationSchema)
             contentType("application/json")
             body(Json.obj(
-                    "destinationAccountId" to accountId,
-                    "amount" to "10"
+                "destinationAccountId" to accountId,
+                "amount" to "10"
             ).toString())
         } When {
             post("/accounts/$accountId/transfers")
@@ -132,17 +142,20 @@ class AccountIntegrationTest : IntegrationTestBase() {
         val sourceAccountId = createAccount()
         deposit(sourceAccountId, "100")
 
-        When {
+        Given {
+            filter(apiValidationSchema)
+        } When {
             get("/accounts/$fakeAccountId")
         } Then {
             statusCode(404)
         }
 
         Given {
+            filter(apiValidationSchema)
             contentType("application/json")
             body(Json.obj(
-                    "destinationAccountId" to fakeAccountId,
-                    "amount" to "80"
+                "destinationAccountId" to fakeAccountId,
+                "amount" to "80"
             ).toString())
         } When {
             post("/accounts/$sourceAccountId/transfers")
@@ -153,6 +166,8 @@ class AccountIntegrationTest : IntegrationTestBase() {
 
     private fun deposit(accountId: Int, amount: String) {
         Given {
+            filter(apiValidationSchema)
+            contentType("application/json")
             body(Json.obj(
                 "amount" to amount
             ).toString())
@@ -166,7 +181,9 @@ class AccountIntegrationTest : IntegrationTestBase() {
     }
 
     private fun createAccount(): Int {
-        return When {
+        return Given {
+            filter(apiValidationSchema)
+        } When {
             post("/accounts")
         } Then {
             statusCode(201)
@@ -178,12 +195,14 @@ class AccountIntegrationTest : IntegrationTestBase() {
     }
 
     private fun verifyAccountBalance(destinationAccountId: Int, transferAmount: String) {
-        When {
+        Given {
+            filter(apiValidationSchema)
+        } When {
             get("/accounts/$destinationAccountId")
         } Then {
             statusCode(200)
             contentType("application/json")
-            body("amount", stringEqualToDecimal(transferAmount))
+            body("balance", stringEqualToDecimal(transferAmount))
         }
     }
 }
